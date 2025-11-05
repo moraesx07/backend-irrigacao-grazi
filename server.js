@@ -1,23 +1,26 @@
-import "dotenv/config"; // Carrega as variáveis do .env
+// server.js
 import express from "express";
-import routes from "./routes.js";
-import "./database.js"; // Importa para inicializar o banco
+import cors from "cors";
+import dotenv from "dotenv";
+import routes from "./routes/index.js"; // importa suas rotas
+import db from "./database.js"; // importa o database diretamente
 
+dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Middleware para interpretar JSON no corpo das requisições
+app.use(cors());
 app.use(express.json());
 
-// Prefixa todas as rotas com '/api'
+// O database.js já inicializa o banco automaticamente,
+// então não precisamos chamar nenhuma função extra aqui.
+
+// Adiciona o prefixo /api para todas as rotas
 app.use("/api", routes);
 
-// Rota raiz de boas-vindas
+// Teste de status do servidor
 app.get("/", (req, res) => {
-  res.send("API de Irrigação no ar! 🚀");
+  res.json({ message: "Servidor rodando com sucesso 🚀" });
 });
 
-// Inicia o servidor
-app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));

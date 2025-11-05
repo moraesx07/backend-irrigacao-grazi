@@ -6,27 +6,48 @@ import { authenticateToken } from "./app/middleware/authMiddleware.js";
 
 const router = Router();
 
-// --- Rotas de Autenticação (Públicas) ---
+/* ==========================
+   ROTAS DE AUTENTICAÇÃO (PÚBLICAS)
+   ========================== */
 router.post("/signup", authController.signup);
-router.post("/signin", authController.signin); // Corrigido de GET para POST
+router.post("/signin", authController.signin);
 router.get("/signout", authController.signout);
 
-// --- Rotas de Usuário (Protegida) ---
+/* ==========================
+   ROTAS DE USUÁRIO (PROTEGIDAS)
+   ========================== */
 router.get("/usuario", authenticateToken, authController.getUser);
 
-// --- Rotas de Irrigação (Protegidas) ---
-router.post(
-  "/umidade/:umidade",
-  authenticateToken,
-  umidadeController.addUmidade
-);
-router.get(
-  "/historicoumidade",
-  authenticateToken,
-  umidadeController.getHistorico
-);
+/* ==========================
+   ROTAS DE UMIDADE (PROTEGIDAS)
+   ========================== */
 
+// 🚀 Nova rota para o Arduino enviar leituras de umidade
+router.post("/umidade", authenticateToken, umidadeController.addUmidade);
+
+// Retorna o histórico das últimas 15 leituras
+router.get("/historicoumidade", authenticateToken, umidadeController.getHistorico);
+
+// Retorna a última leitura registrada
+router.get("/umidade/ultima", authenticateToken, umidadeController.getUltimaLeitura);
+
+/* ==========================
+   ROTAS DE CONTROLE DE ÁGUA (PROTEGIDAS)
+   ========================== */
+
+// Alterna manualmente o estado da bomba (liga/desliga)
 router.post("/agua", authenticateToken, aguaController.setAgua);
+
+// Liga manualmente a bomba
+router.post("/agua/ligar", authenticateToken, aguaController.ligarAgua);
+
+// Desliga manualmente a bomba
+router.post("/agua/desligar", authenticateToken, aguaController.desligarAgua);
+
+// Retorna o estado atual da bomba (ligada/desligada)
 router.get("/agua", authenticateToken, aguaController.getAgua);
+
+// Rota de status resumido (pode ser usada pelo app)
+router.get("/status", authenticateToken, aguaController.getStatus);
 
 export default router;
