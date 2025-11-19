@@ -10,7 +10,7 @@ const db = new sqlite3.Database("./database.sqlite", (err) => {
   }
 });
 
-function initDb() {
+async function initDb() {
   db.serialize(() => {
     // Tabela de Usuários
     db.run(`
@@ -73,6 +73,40 @@ function initDb() {
     `);
 
     console.log("Banco de dados inicializado com sucesso.");
+
+    // -------------------------------------------------------
+    // 🔥 Criar usuário ADM automaticamente se não existir 🔥
+    // -------------------------------------------------------
+
+    db.get("SELECT * FROM usuarios WHERE usuario = 'adm'", async (err, row) => {
+      if (err) {
+        console.error("Erro ao verificar usuário ADM:", err.message);
+        return;
+      }
+
+      if (!row) {
+        console.log("Criando usuário ADM padrão...");
+
+        const bcrypt = await import("bcryptjs");
+        const senhaHash = bcrypt.default.hashSync("minha_senha_123", 10);
+
+        db.run(
+          "INSERT INTO usuarios (usuario, senha) VALUES (?, ?)",
+          ["adm", senhaHash],
+          (err) => {
+            if (err) {
+              console.error("Erro ao criar ADM:", err.message);
+            } else {
+              console.log("Usuário ADM criado com sucesso!");
+            }
+          }
+        );
+      } else {
+        console.log("ADM já existe, não será recriado.");
+      }
+    });
+
+    // -------------------------------------------------------
   });
 }
 
