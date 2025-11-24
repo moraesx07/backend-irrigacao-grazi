@@ -14,7 +14,7 @@ export const addUmidade = async (req, res) => {
 
     // --- Controle automático ---
     // Defina aqui o limite de umidade mínima para acionar a bomba
-    const LIMITE_MINIMO = 40;
+    const LIMITE_MINIMO = 20;
 
     let ligada;
     if (valor < LIMITE_MINIMO) {
