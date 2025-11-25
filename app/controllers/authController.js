@@ -7,9 +7,7 @@ export const signup = async (req, res) => {
   try {
     const { usuario, senha } = req.body;
     if (!usuario || !senha) {
-      return res
-        .status(400)
-        .json({ message: "Usuário e senha são obrigatórios." });
+      return res.status(400).json({ message: "Usuário e senha são obrigatórios." });
     }
 
     const existingUser = await userModel.findByUsuario(usuario);
@@ -20,22 +18,18 @@ export const signup = async (req, res) => {
     const senhaHash = await bcrypt.hash(senha, 10);
     const newUser = await userModel.create(usuario, senhaHash);
 
-    res
-      .status(201)
-      .json({ message: "Usuário criado com sucesso!", user: newUser });
+    res.status(201).json({ message: "Usuário criado com sucesso!", user: newUser });
   } catch (error) {
     res.status(500).json({ message: "Erro no servidor", error: error.message });
   }
 };
 
-// POST /signin (Nota: Mudei de GET para POST, que é o correto para enviar body)
+// POST /signin (login com token)
 export const signin = async (req, res) => {
   try {
     const { usuario, senha } = req.body;
     if (!usuario || !senha) {
-      return res
-        .status(400)
-        .json({ message: "Usuário e senha são obrigatórios." });
+      return res.status(400).json({ message: "Usuário e senha são obrigatórios." });
     }
 
     const user = await userModel.findByUsuario(usuario);
@@ -50,13 +44,11 @@ export const signin = async (req, res) => {
 
     // Cria o token JWT
     const payload = { id: user.id, usuario: user.usuario };
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: "1h", // Token expira em 1 hora
-    });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
 
     res.json({
       message: "Login bem-sucedido!",
-      token: `Bearer ${token}`,
+      token,
       user: payload,
     });
   } catch (error) {
@@ -64,15 +56,13 @@ export const signin = async (req, res) => {
   }
 };
 
-// GET /usuario (Protegido)
+// GET /usuario (agora livre, sem token)
 export const getUser = async (req, res) => {
   try {
-    // req.user é injetado pelo middleware 'authenticateToken'
-    const user = await userModel.findById(req.user.id);
+    const { id } = req.body; // agora o frontend pode enviar o ID ou usar outro método
+    const user = await userModel.findById(id);
     if (!user) {
-      return res
-        .status(404)
-        .json({ message: "Usuário do token não encontrado." });
+      return res.status(404).json({ message: "Usuário não encontrado." });
     }
     res.json(user);
   } catch (error) {
@@ -82,9 +72,5 @@ export const getUser = async (req, res) => {
 
 // GET /signout
 export const signout = (req, res) => {
-  // Em um sistema JWT stateless, o "signout" é responsabilidade do cliente.
-  // O cliente deve apenas apagar/invalidar o token do seu armazenamento.
-  res.json({
-    message: "Logout realizado. Por favor, apague o token no cliente.",
-  });
+  res.json({ message: "Logout realizado. Por favor, apague o token no cliente." });
 };

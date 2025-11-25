@@ -1,6 +1,7 @@
 import * as umidadeModel from "../models/umidadeModel.js";
 import * as aguaModel from "../models/aguaModel.js";
 
+// Adiciona nova leitura de umidade e controla a bomba automaticamente
 export const addUmidade = async (req, res) => {
   try {
     const { valor } = req.body;
@@ -8,28 +9,25 @@ export const addUmidade = async (req, res) => {
       return res.status(400).json({ message: "Valor de umidade não fornecido." });
     }
 
-    // Salva leitura no banco
     const leitura = await umidadeModel.salvarLeitura(valor);
     console.log("Nova leitura registrada:", leitura);
 
-    // --- Controle automático ---
-    // Defina aqui o limite de umidade mínima para acionar a bomba
     const LIMITE_MINIMO = 20;
+    const LIMITE_MAXIMO = 80;
 
-    let ligada;
-    if (valor < LIMITE_MINIMO) {
-      ligada = 1; // liga bomba
-    } else {
-      ligada = 0; // desliga bomba
-    }
+    const ultimaAgua = await aguaModel.findLast();
+    const estadoAtual = ultimaAgua ? ultimaAgua.ligada : 0;
+    let novaBomba = estadoAtual;
 
-    // Registra novo estado na tabela agua
-    await aguaModel.create(ligada);
+    if (valor < LIMITE_MINIMO && estadoAtual === 0) novaBomba = 1;
+    else if (valor >= LIMITE_MAXIMO && estadoAtual === 1) novaBomba = 0;
 
-    return res.status(200).json({
+    if (novaBomba !== estadoAtual) await aguaModel.create(novaBomba);
+
+    res.status(200).json({
       message: "Leitura registrada e decisão tomada.",
       leitura,
-      bombaLigada: ligada,
+      bombaLigada: novaBomba,
     });
   } catch (error) {
     console.error("Erro ao registrar umidade:", error);
@@ -37,25 +35,22 @@ export const addUmidade = async (req, res) => {
   }
 };
 
+// Últimas 15 leituras
 export const getHistorico = async (req, res) => {
   try {
     const historico = await umidadeModel.findLast15();
-    res.status(200).json(historico);
+    res.json(historico);
   } catch (error) {
-    console.error("Erro ao buscar histórico:", error);
-    res.status(500).json({ message: "Erro ao buscar histórico de umidade." });
+    res.status(500).json({ message: "Erro ao buscar histórico de umidade.", error: error.message });
   }
 };
 
+// Última leitura
 export const getUltimaLeitura = async (req, res) => {
   try {
-    const ultima = await umidadeModel.findLast();
-    if (!ultima) {
-      return res.status(404).json({ message: "Nenhuma leitura encontrada." });
-    }
-    res.status(200).json(ultima);
+    const leitura = await umidadeModel.getUltimaLeitura();
+    res.json(leitura);
   } catch (error) {
-    console.error("Erro ao buscar última leitura:", error);
-    res.status(500).json({ message: "Erro ao buscar última leitura." });
+    res.status(500).json({ message: "Erro ao buscar última leitura de umidade.", error: error.message });
   }
 };
