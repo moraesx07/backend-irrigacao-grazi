@@ -13,7 +13,7 @@ export const addUmidade = async (req, res) => {
     console.log("Nova leitura registrada:", leitura);
 
     const LIMITE_MINIMO = 20;
-    const LIMITE_MAXIMO = 80;
+    const LIMITE_MAXIMO = 70;
 
     const ultimaAgua = await aguaModel.findLast();
     const estadoAtual = ultimaAgua ? ultimaAgua.ligada : 0;
