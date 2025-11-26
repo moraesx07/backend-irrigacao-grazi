@@ -5,7 +5,7 @@ import * as aguaModel from "./app/models/aguaModel.js";
 const mqttClient = mqtt.connect("mqtt://test.mosquitto.org");
 
 const LIMITE_MIN = 20;
-const LIMITE_MAX = 70;
+const LIMITE_MAX = 60;
 
 mqttClient.on("connect", () => {
   console.log("✅ Conectado ao broker MQTT!");
